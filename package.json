@@ -15,10 +15,13 @@
     "datejs": "^1.0.0-rc3",
     "dayjs": "^1.11.21",
     "gsap": "^3.15.0",
+    "immer": "^11.1.8",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "tailwindcss": "^4.3.0"
+    "react-tooltip": "^6.0.6",
+    "tailwindcss": "^4.3.0",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

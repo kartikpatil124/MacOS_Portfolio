@@ -57,12 +57,6 @@ const setupTextHover = (container, type) => {
 
 
 
-
-
-
-
-
-
 const Welcome = () => {
 
   const titleRef = useRef(null);
