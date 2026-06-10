@@ -334,17 +334,21 @@ body {
         }
 
         .content {
-            @apply flex-1 p-8 bg-white max-w-2xl relative;
+            @apply flex-1 p-8 bg-white max-w-2xl overflow-y-auto;
+
+            ul {
+                @apply flex flex-wrap gap-8;
+            }
 
             li {
-                @apply absolute flex items-center flex-col gap-3;
+                @apply relative flex items-center flex-col gap-2 cursor-pointer;
 
                 img {
                     @apply object-contain object-center size-16 relative group-hover:scale-105;
                 }
 
                 p {
-                    @apply text-sm text-center font-medium w-40;
+                    @apply text-sm text-center font-medium w-24 break-words;
                 }
             }
         }

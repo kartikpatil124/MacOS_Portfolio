@@ -1,5 +1,9 @@
 
-import { Navbar, Welcome, Dock } from "./components/imports"
+import { Navbar, Welcome, Dock, Home } from "./components/imports"
+import gsap from "gsap"
+import {Draggable} from "gsap/Draggable"
+import { Terminal, Safari, Resume, Finder, Text, ImageFile, Contact } from "./windows";
+gsap.registerPlugin(Draggable);
 
 
 function App() {
@@ -8,6 +12,15 @@ function App() {
     <Navbar />
     <Welcome />
     <Dock />
+
+    <Terminal/> 
+    <Safari />
+    <Resume />
+    <Finder />
+    <Text />
+    <ImageFile />
+    <Contact />
+    <Home />
   </main>
 }
 
