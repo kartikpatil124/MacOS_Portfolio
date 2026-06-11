@@ -1,17 +1,16 @@
 import gsap from "gsap";
 import { Draggable } from "gsap/Draggable";
 import { useGSAP } from "@gsap/react";
-import { locations } from "../constants";
 import useWindowStore from "../store/window";
 import useLocationStore from "../store/loction";
 
 gsap.registerPlugin(Draggable);
 
-const projects = locations.work?.children ?? [];
-
 const Home = () => {
-  const { setActiveLocation } = useLocationStore();
+  const { locations: storeLocations, setActiveLocation } = useLocationStore();
   const { openWindow } = useWindowStore();
+
+  const projects = storeLocations.work?.children ?? [];
 
   const handleOpenProjectFinder = (project) => {
     setActiveLocation(project);
@@ -20,7 +19,7 @@ const Home = () => {
 
   useGSAP(() => {
     Draggable.create(".folder");
-  }, []);
+  }, [projects]);
 
   return (
     <section id="home">

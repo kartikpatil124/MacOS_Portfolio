@@ -13,7 +13,7 @@ const Contact = () => {
       <div className="p-8 space-y-8 bg-white max-h-[85vh] overflow-y-auto">
         <div className="flex items-center gap-6">
           <img 
-            src="/images/adrian.jpg" 
+            src="/images/kartik2.jpeg" 
             alt="Adrian" 
             className="size-20 rounded-full object-cover border border-gray-200"
           />

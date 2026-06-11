@@ -20,7 +20,7 @@ const Text = () => {
                     <img 
                         src={data.image} 
                         alt={data.name} 
-                        className="w-full h-48 object-cover rounded-lg mb-4 shadow-sm"
+                        className="w-full h-auto rounded-lg mb-4 shadow-sm"
                     />
                 )}
                 
