@@ -312,7 +312,7 @@ const Finder = () => {
                                         </svg>
                                     </div>
                                     <h3 className="text-sm font-bold text-gray-800 mb-1">Admin Passcode</h3>
-                                    <p className="text-[11px] text-gray-400 mb-6 font-medium">Please enter PIN 9519 to unlock</p>
+                                    <p className="text-[11px] text-gray-400 mb-6 font-medium">Please enter PIN to unlock</p>
                                     
                                     <form onSubmit={handlePinSubmit} className="space-y-4">
                                         <input
