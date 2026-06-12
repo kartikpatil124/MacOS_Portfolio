@@ -30,9 +30,6 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseToken: ${{ secrets.FIREBASE_TOKEN }}
-          projectId: kp-portfolio3100
-          channelId: live
+        run: npx firebase-tools deploy --only hosting --project kp-portfolio3100
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
