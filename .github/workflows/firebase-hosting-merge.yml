@@ -30,6 +30,6 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.VITE_FIREBASE_APP_ID }}
 
       - name: Deploy to Firebase Hosting
-        run: npx firebase-tools deploy --only hosting --project kp-portfolio3100
+        run: npx -y firebase-tools deploy --only hosting --project kp-portfolio3100 --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
