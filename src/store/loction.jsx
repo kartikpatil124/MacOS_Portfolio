@@ -95,25 +95,10 @@ const useLocationStore = create(
     },
 
     addProject: async (project, rawImageBase64 = null) => {
-      let finalImageUrl = "";
-
-      if (isFirebaseConfigured && rawImageBase64) {
-        if (storage) {
-          try {
-            const storageRef = ref(storage, `project-previews/${project.id}`);
-            await uploadString(storageRef, rawImageBase64, "data_url");
-            finalImageUrl = await getDownloadURL(storageRef);
-          } catch (error) {
-            console.warn("Could not upload to Firebase Storage (requires upgraded plan). Falling back to saving image directly in Firestore database.", error);
-            finalImageUrl = rawImageBase64;
-          }
-        } else {
-          finalImageUrl = rawImageBase64;
-        }
-
+      if (rawImageBase64) {
         const imgChild = project.children.find(c => c.fileType === "img");
         if (imgChild) {
-          imgChild.imageUrl = finalImageUrl;
+          imgChild.imageUrl = rawImageBase64;
         }
       }
 
@@ -164,22 +149,7 @@ const useLocationStore = create(
     },
 
     editProject: async (projectId, updatedFields, rawImageBase64 = null) => {
-      let finalImageUrl = updatedFields.image;
-
-      if (isFirebaseConfigured && rawImageBase64) {
-        if (storage) {
-          try {
-            const storageRef = ref(storage, `project-previews/${projectId}`);
-            await uploadString(storageRef, rawImageBase64, "data_url");
-            finalImageUrl = await getDownloadURL(storageRef);
-          } catch (error) {
-            console.warn("Could not upload to Firebase Storage (requires upgraded plan). Falling back to saving image directly in Firestore database.", error);
-            finalImageUrl = rawImageBase64;
-          }
-        } else {
-          finalImageUrl = rawImageBase64;
-        }
-      }
+      let finalImageUrl = rawImageBase64 || updatedFields.image;
 
       const oldProject = useLocationStore.getState().locations.work.children.find(
         (child) => child.id === projectId
@@ -187,12 +157,24 @@ const useLocationStore = create(
 
       if (!oldProject) return;
 
+      const textFile = oldProject.children.find(c => c.fileType === "txt");
+      
+      const linkFiles = updatedFields.links.map((link, idx) => ({
+        id: Date.now() + 10 + idx,
+        name: `${link.title}.com`,
+        icon: "/images/safari.png",
+        kind: "file",
+        fileType: "url",
+        href: link.url,
+        position: `top-${10 + idx * 12} right-20`,
+      }));
+
       const updatedProject = {
         ...oldProject,
         name: updatedFields.name,
         children: [
           {
-            id: oldProject.children[0]?.id || Date.now() + 1,
+            id: textFile?.id || Date.now() + 1,
             name: `${updatedFields.name} Project.txt`,
             icon: "/images/txt.png",
             kind: "file",
@@ -200,17 +182,9 @@ const useLocationStore = create(
             position: "top-5 left-10",
             description: updatedFields.description,
           },
-          {
-            id: oldProject.children[1]?.id || Date.now() + 2,
-            name: `${updatedFields.name.toLowerCase().replace(/\s+/g, "-")}.com`,
-            icon: "/images/safari.png",
-            kind: "file",
-            fileType: "url",
-            href: updatedFields.github,
-            position: "top-10 right-20",
-          },
+          ...linkFiles,
           ...(finalImageUrl ? [{
-            id: oldProject.children[2]?.id || Date.now() + 3,
+            id: Date.now() + 100,
             name: `${updatedFields.name.toLowerCase().replace(/\s+/g, "-")}.png`,
             icon: "/images/image.png",
             kind: "file",

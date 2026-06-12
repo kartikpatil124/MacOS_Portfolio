@@ -5,6 +5,38 @@ import WindowWrapper from "../hoc/WindowWrapper";
 import useLocationStore from "../store/loction";
 import useWindowStore from "../store/window";
 
+const compressImage = (base64Str, callback) => {
+    const img = new Image();
+    img.src = base64Str;
+    img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+            if (width > MAX_WIDTH) {
+                height *= MAX_WIDTH / width;
+                width = MAX_WIDTH;
+            }
+        } else {
+            if (height > MAX_HEIGHT) {
+                width *= MAX_HEIGHT / height;
+                height = MAX_HEIGHT;
+            }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+        callback(base64Str);
+    };
+};
+
 const Finder = () => {
     const { 
         locations: storeLocations, 
@@ -30,7 +62,7 @@ const Finder = () => {
     // Form fields
     const [projName, setProjName] = useState("");
     const [projDesc, setProjDesc] = useState("");
-    const [projGithub, setProjGithub] = useState("");
+    const [projLinks, setProjLinks] = useState([{ title: "GitHub", url: "" }]);
     const [projImage, setProjImage] = useState("");
 
     useEffect(() => {
@@ -59,7 +91,7 @@ const Finder = () => {
     const handleOpenAddForm = () => {
         setProjName("");
         setProjDesc("");
-        setProjGithub("");
+        setProjLinks([{ title: "GitHub", url: "" }]);
         setProjImage("");
         setIsAdding(true);
         setIsEditing(false);
@@ -67,12 +99,21 @@ const Finder = () => {
 
     const handleOpenEditForm = (project) => {
         const txtFile = project.children.find(c => c.fileType === "txt");
-        const urlFile = project.children.find(c => c.fileType === "url");
         const imgFile = project.children.find(c => c.fileType === "img");
+        
+        // Find all URL files and extract title/url
+        const urlFiles = project.children.filter(c => c.fileType === "url");
+        const initialLinks = urlFiles.map(file => {
+            const hasCom = file.name.endsWith(".com");
+            return {
+                title: hasCom ? file.name.slice(0, -4) : file.name,
+                url: file.href || "",
+            };
+        });
 
         setProjName(project.name);
         setProjDesc(Array.isArray(txtFile?.description) ? txtFile.description.join("\n") : txtFile?.description || "");
-        setProjGithub(urlFile?.href || "");
+        setProjLinks(initialLinks.length > 0 ? initialLinks : [{ title: "GitHub", url: "" }]);
         setProjImage(imgFile?.imageUrl || "");
         setEditingProjectId(project.id);
         setIsEditing(true);
@@ -90,7 +131,9 @@ const Finder = () => {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setProjImage(reader.result);
+                compressImage(reader.result, (compressed) => {
+                    setProjImage(compressed);
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -107,17 +150,29 @@ const Finder = () => {
         const descArray = projDesc.split("\n").filter(line => line.trim() !== "");
         const isBase64 = projImage && projImage.startsWith("data:image/");
 
+        const activeLinks = projLinks.filter(l => l.title.trim() !== "" && l.url.trim() !== "");
+
         if (isEditing) {
             editProject(editingProjectId, {
                 name: projName,
                 description: descArray,
-                github: projGithub,
+                links: activeLinks,
                 image: isBase64 ? "" : projImage,
             }, isBase64 ? projImage : null);
         } else {
             const index = storeLocations.work.children.length;
             const newProjId = Date.now();
             const folderName = projName;
+
+            const linkFiles = activeLinks.map((link, idx) => ({
+                id: newProjId + 2 + idx,
+                name: `${link.title}.com`,
+                icon: "/images/safari.png",
+                kind: "file",
+                fileType: "url",
+                href: link.url,
+                position: `top-${10 + idx * 12} right-20`,
+            }));
 
             const newProject = {
                 id: newProjId,
@@ -136,17 +191,9 @@ const Finder = () => {
                         position: "top-5 left-10",
                         description: descArray,
                     },
-                    {
-                        id: newProjId + 2,
-                        name: `${folderName.toLowerCase().replace(/\s+/g, "-")}.com`,
-                        icon: "/images/safari.png",
-                        kind: "file",
-                        fileType: "url",
-                        href: projGithub,
-                        position: "top-10 right-20",
-                    },
-                    ...(projImage && !isBase64 ? [{
-                        id: newProjId + 3,
+                    ...linkFiles,
+                    ...(projImage ? [{
+                        id: newProjId + 100,
                         name: `${folderName.toLowerCase().replace(/\s+/g, "-")}.png`,
                         icon: "/images/image.png",
                         kind: "file",
@@ -333,15 +380,55 @@ const Finder = () => {
                                     </div>
 
                                     <div>
-                                        <label className="block text-[10px] font-bold text-gray-500 mb-1">GitHub / URL Link</label>
-                                        <input
-                                            type="url"
-                                            required
-                                            placeholder="https://github.com/..."
-                                            value={projGithub}
-                                            onChange={(e) => setProjGithub(e.target.value)}
-                                            className="w-full text-xs border border-gray-200 rounded-lg p-2.5 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
-                                        />
+                                        <label className="block text-[10px] font-bold text-gray-500 mb-1">Project Links</label>
+                                        <div className="space-y-2">
+                                            {projLinks.map((link, idx) => (
+                                                <div key={idx} className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        required
+                                                        placeholder="Link Title (e.g. GitHub)"
+                                                        value={link.title}
+                                                        onChange={(e) => {
+                                                            const newLinks = [...projLinks];
+                                                            newLinks[idx].title = e.target.value;
+                                                            setProjLinks(newLinks);
+                                                        }}
+                                                        className="w-1/3 text-xs border border-gray-200 rounded-lg p-2 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                                                    />
+                                                    <input
+                                                        type="url"
+                                                        required
+                                                        placeholder="https://..."
+                                                        value={link.url}
+                                                        onChange={(e) => {
+                                                            const newLinks = [...projLinks];
+                                                            newLinks[idx].url = e.target.value;
+                                                            setProjLinks(newLinks);
+                                                        }}
+                                                        className="w-2/3 text-xs border border-gray-200 rounded-lg p-2 outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-100"
+                                                    />
+                                                    {projLinks.length > 1 && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                setProjLinks(projLinks.filter((_, i) => i !== idx));
+                                                            }}
+                                                            className="text-red-500 hover:text-red-600 text-xs px-1 font-bold animate-fade-in"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setProjLinks([...projLinks, { title: "", url: "" }])}
+                                            className="mt-2 text-blue-500 hover:text-blue-600 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                                        >
+                                            + Add Link
+                                        </button>
                                     </div>
 
                                     <div>

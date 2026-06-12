@@ -10,7 +10,10 @@ const Home = () => {
   const { locations: storeLocations, setActiveLocation } = useLocationStore();
   const { openWindow } = useWindowStore();
 
-  const projects = storeLocations.work?.children ?? [];
+  // Filter out new uploaded projects so they do not show on the homescreen (desktop)
+  const projects = (storeLocations.work?.children ?? []).filter(
+    (project) => project.id === 5 || project.id === 6 || project.id === 7
+  );
 
   const handleOpenProjectFinder = (project) => {
     setActiveLocation(project);
